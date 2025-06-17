@@ -1,66 +1,104 @@
-from inference import get_model
 from roboflow import Roboflow
 from PIL import Image, ImageDraw, ImageFont
 import matplotlib.pyplot as plt
+import cv2
+import os
+import sys
+import time
+import glob
+import shutil
 
-# Define the image file to use for inference
-image_file = "20250605_144656_mp4-0050.jpg"
+# Parameters
+video_path = sys.argv[1] if len(sys.argv) > 1 else "No video path provided."
+output_dir = "frames_output"
+annotated_video_path = "annotated_video.mp4"
+os.makedirs(output_dir, exist_ok=True)
+
+# Model parameters
+target_class_name = "Melon"
+conf_threshold = 0.7
+
+
+try:
+    font = ImageFont.truetype("arial.ttf", 40)
+except:
+    font = ImageFont.load_default()
 
 # Load the model from Roboflow, and not from a local file because I can't download the weights from RF
 rf = Roboflow(api_key="PoYOulqxaReqSWTbxwT2")
 project = rf.workspace().project("rap_utp_tobacco")
 model = project.version(2).model
 
-# Run inference to predict
-results = model.predict(image_file).json()
+cap = cv2.VideoCapture(video_path)
+fps = int(cap.get(cv2.CAP_PROP_FPS))
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-# Filter by class "Melon" and with confidence >= 0.7
-target_class_name = "Melon"
-filtered_boxes = []
+total_melon_count=0
+frame_idx = 0
 
-for prediction in results.get('predictions', []):
-    x = prediction['x']
-    y = prediction['y']
-    width = prediction['width']
-    height = prediction['height']
-    class_conf = prediction['confidence']
-    label = prediction['class']
+t_start = time.perf_counter()
 
-    # Calculate the bounding box coordinates in xyxy format and substracting half width and height
-    # to center the box around the predicted point
-    x1,y1,x2,y2 = x - width / 2, y - height / 2, x + width / 2, y + height / 2
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+    
 
-    if label == target_class_name and class_conf >= 0.7:
-        filtered_boxes.append(((x1, y1, x2, y2), class_conf, label))
+    # converting the frame to PIL format so we can draw on it later 
+    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    pil_image = Image.fromarray(frame_rgb)
 
-melon_count = len(filtered_boxes)
+    print(f"Processing frame {frame_idx}")
+    
+    results = model.predict(frame).json()
+    frame_melon_count = 0
+    
+    draw = ImageDraw.Draw(pil_image)
 
-# Open img with PIL
-with Image.open(image_file) as im: 
-    draw = ImageDraw.Draw(im)
-    font = ImageFont.truetype("arial.ttf", 50)
+    for prediction in results.get('predictions', []):
+        x, y, width, height, class_conf, label = prediction['x'], prediction['y'], prediction['width'], prediction['height'], prediction['confidence'], prediction['class']
+        # Calculate the bounding box coordinates in xyxy format and substracting half width and height
+        # to center the box around the predicted point
+        x1,y1,x2,y2 = x - width / 2, y - height / 2, x + width / 2, y + height / 2
 
-    for xyxy, conf, label in filtered_boxes:
-        x1, y1, x2, y2 = map(int, xyxy)
-        draw.rectangle((x1, y1, x2, y2), outline="purple", width=6)
+        if label == target_class_name and class_conf >= conf_threshold:
+            frame_melon_count += 1
+            x1, y1 = x - width/2, y - height/2
+            x2, y2 = x + width/2, y + height/2
+            draw.rectangle([x1, y1, x2, y2], outline="purple", width=4)
 
-        # Draw label and confidence above the bounding box
-        # Adjust the position to avoid overlap with the bounding box
-        bbox = draw.textbbox((x1 + 10, y1 - 50), f"{label} {conf:.2f}", font=font)
-        draw.rectangle((bbox[0] - 10, bbox[1] - 10, bbox[2] + 10, bbox[3] + 10), fill="purple")
-        draw.text((x1 + 10, y1 - 50), f"{label} {conf:.2f}", fill="white", font=font)
+            label_text = f"{label} {class_conf:.2f}"
+            bbox = draw.textbbox((x1 + 10, y1 - 40), label_text, font=font)
+            draw.rectangle((bbox[0]-5, bbox[1]-5, bbox[2]+5, bbox[3]+5), fill="purple")
+            draw.text((x1 + 10, y1 - 40), label_text, fill="white", font=font)
 
-    # Save before displaying because the code won't save until we close the matplotlib render
-    im.save("output_annotated.jpg")
+    total_melon_count += frame_melon_count
+    pil_image.save(f"{output_dir}/annotated_{frame_idx:04d}.jpg")
+    frame_idx += 1
 
-    # Display
-    plt.figure(figsize=(8, 8))
-    plt.imshow(im)
-    plt.axis('off')
-    plt.title(f"Melon Count: {melon_count}")
-    plt.show()
+cap.release()
 
+# Create annotated video from saved frames
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+out = cv2.VideoWriter(annotated_video_path, fourcc, fps, (int(width), int(height)))
+
+# Liste des fichiers réellement créés
+annotated_images = sorted(glob.glob(f"{output_dir}/annotated_*.jpg"))
+
+for img_path in annotated_images:
+    frame = cv2.imread(img_path)
+    if frame is not None:
+        out.write(frame)
+    else:
+        print(f"Warning: Could not read {img_path}")
+
+t_stop = time.perf_counter()
+time_taken = (t_stop - t_start)
+
+out.release()
 # Print the outputs
-print("Melon Count:", melon_count)
-for _, conf, label in filtered_boxes:
-    print({"label": label, "confidence": conf})
+print("Melon Count:", total_melon_count)
+print("Time taken (seconds):", time_taken)
+
+shutil.rmtree(output_dir)
