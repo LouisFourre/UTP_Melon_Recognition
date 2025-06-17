@@ -1,12 +1,7 @@
 from roboflow import Roboflow
 from PIL import Image, ImageDraw, ImageFont
 import matplotlib.pyplot as plt
-import cv2
-import os
-import sys
-import time
-import glob
-import shutil
+import cv2, os, sys, time, glob, shutil
 
 # Parameters
 video_path = sys.argv[1] if len(sys.argv) > 1 else "No video path provided."
@@ -97,6 +92,7 @@ t_stop = time.perf_counter()
 time_taken = (t_stop - t_start)
 
 out.release()
+
 # Print the outputs
 print("Melon Count:", total_melon_count)
 print("Time taken (seconds):", time_taken)
