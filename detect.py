@@ -1,13 +1,13 @@
-from roboflow import Roboflow
+from ultralytics import YOLO
 from PIL import Image, ImageDraw, ImageFont
 import matplotlib.pyplot as plt
 import cv2, os, sys, time, glob, shutil
 
 # Parameters
 video_path = sys.argv[1] if len(sys.argv) > 1 else "No video path provided."
-output_dir = "frames_output"
-annotated_video_path = "annotated_video.mp4"
-os.makedirs(output_dir, exist_ok=True)
+annotated_dir = "frames_output"
+annotated_video_path = "output/annotated_video.mp4"
+os.makedirs(annotated_dir, exist_ok=True)
 
 # Model parameters
 target_class_name = "Melon"
@@ -19,10 +19,7 @@ try:
 except:
     font = ImageFont.load_default()
 
-# Load the model from Roboflow, and not from a local file because I can't download the weights from RF
-rf = Roboflow(api_key="PoYOulqxaReqSWTbxwT2")
-project = rf.workspace().project("rap_utp_tobacco")
-model = project.version(2).model
+model = YOLO("models/detect/train2/weights/best.pt")
 
 cap = cv2.VideoCapture(video_path)
 fps = int(cap.get(cv2.CAP_PROP_FPS))
@@ -39,37 +36,34 @@ while cap.isOpened():
     if not ret:
         break
     
-
     # converting the frame to PIL format so we can draw on it later 
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     pil_image = Image.fromarray(frame_rgb)
 
     print(f"Processing frame {frame_idx}")
     
-    results = model.predict(frame).json()
+    results = model.predict(frame)
+
     frame_melon_count = 0
-    
     draw = ImageDraw.Draw(pil_image)
 
-    for prediction in results.get('predictions', []):
-        x, y, width, height, class_conf, label = prediction['x'], prediction['y'], prediction['width'], prediction['height'], prediction['confidence'], prediction['class']
-        # Calculate the bounding box coordinates in xyxy format and substracting half width and height
-        # to center the box around the predicted point
-        x1,y1,x2,y2 = x - width / 2, y - height / 2, x + width / 2, y + height / 2
+    for box in results[0].boxes:
+        x1, y1, x2, y2 = box.xyxy[0].tolist()
+        conf = box.conf[0].item()
+        cls_id = int(box.cls[0].item())
+        label = model.names[cls_id]
 
-        if label == target_class_name and class_conf >= conf_threshold:
+        if label == target_class_name and conf >= conf_threshold:
             frame_melon_count += 1
-            x1, y1 = x - width/2, y - height/2
-            x2, y2 = x + width/2, y + height/2
             draw.rectangle([x1, y1, x2, y2], outline="purple", width=4)
 
-            label_text = f"{label} {class_conf:.2f}"
+            label_text = f"{label} {conf:.2f}"
             bbox = draw.textbbox((x1 + 10, y1 - 40), label_text, font=font)
             draw.rectangle((bbox[0]-5, bbox[1]-5, bbox[2]+5, bbox[3]+5), fill="purple")
             draw.text((x1 + 10, y1 - 40), label_text, fill="white", font=font)
 
     total_melon_count += frame_melon_count
-    pil_image.save(f"{output_dir}/annotated_{frame_idx:04d}.jpg")
+    pil_image.save(f"{annotated_dir}/annotated_{frame_idx:04d}.jpg")
     frame_idx += 1
 
 cap.release()
@@ -79,7 +73,7 @@ fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter(annotated_video_path, fourcc, fps, (int(width), int(height)))
 
 # Liste des fichiers réellement créés
-annotated_images = sorted(glob.glob(f"{output_dir}/annotated_*.jpg"))
+annotated_images = sorted(glob.glob(f"{annotated_dir}/annotated_*.jpg"))
 
 for img_path in annotated_images:
     frame = cv2.imread(img_path)
@@ -97,4 +91,4 @@ out.release()
 print("Melon Count:", total_melon_count)
 print("Time taken (seconds):", time_taken)
 
-shutil.rmtree(output_dir)
+shutil.rmtree(annotated_dir)  # Clean up the annotated frames directory
