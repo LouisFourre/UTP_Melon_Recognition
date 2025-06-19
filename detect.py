@@ -9,22 +9,23 @@ target_class_name = "Melon"
 conf_threshold = 0.7
 
 model = YOLO("models/detect/train2/weights/best.pt")
-model.to('cuda' if torch.cuda.is_available() else 'cpu')
+model.to('cuda' if torch.cuda.is_available() else 'cpu') # Need pytorch with cuda support!!
 
 t_start = time.perf_counter()
 
-results = model.track(video_path,show=True, conf=conf_threshold, save=True)
+results = model.track(video_path, show=True, conf=conf_threshold, save=True)
 
-last_seen_ids = 0
+# get the last seen melon ids, cause each id is unique, last id is also the nulber of melons
+last_seen_id = 0
 for result in reversed(results):
     if result.boxes.id is not None:
         ids = result.boxes.id.cpu().numpy().astype(int)
         if len(ids) > 0:
-            last_seen_ids = ids
+            last_seen_id = ids
             break
         
 t_stop = time.perf_counter()
 
-# print last entry in results
-print("Number of melon: ", last_seen_ids)
+# Print results
+print("Number of melon: ", last_seen_id)
 print("Time taken to compute: ",t_stop - t_start)
