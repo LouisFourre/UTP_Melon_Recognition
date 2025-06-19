@@ -4,13 +4,16 @@ Project use to count the number of melon on a given video.
 This is used to count the number of melon in the first row situated in a greenhouse 
 
 ## Install
-To use this code, you need first to install theses packages
+To use this code, you need first to install theses packages for the detect.py:
 
- - Roboflow
- - Matplotlib
  - Ultralytics
- - Opencv-headless
+ - Pytorch (with cuda to improve computation time by a lot)
+
+And dor the old_detect.py, you also need to install theses packages:
+
  - Pillow
+ - Matlpotlib
+ - Opencv-headless
 
 ## Model creation  
 
