@@ -22,7 +22,11 @@ The dataset was made with the Roboflow online annotation tool. 187 images have b
 
 ### Train  
 
-``yolo train data=dataset/v1 epochs=100 imgsz=640``  
+There is 2 model available:  
+ - V1 detect melons in the background and the front row
+ - V2 detect melons only in the front row
+
+``yolo train data=dataset/v2 epochs=100 imgsz=640``  
 
 ## Launch
 You can lauch this model with this commande
