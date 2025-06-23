@@ -22,7 +22,7 @@ The dataset was made with the Roboflow online annotation tool. 187 images have b
 
 ### Train  
 
-``yolo train data=rap_utp_tobacco.v2i.yolov11 epochs=100 imgsz=640``  
+``yolo train data=dataset/v1 epochs=100 imgsz=640``  
 
 ## Launch
 You can lauch this model with this commande
