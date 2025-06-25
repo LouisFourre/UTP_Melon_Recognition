@@ -25,13 +25,14 @@ The dataset was made with the Roboflow online annotation tool. 187 images have b
 
 ### Train  
 
-There is 2 model available:  
+There are 3 dataset versions availables:  
  - V1 detect melons in the background and the front row
  - V2 detect melons only in the front row
+ - V3 detect and sort the melons if they are in the front row or behind the front row
 
 If you want to make your own model and use the dataset,  install the YOLO cli tool and run this command to make a basic model. Fine tunning can be achieved with other arguments.
 
-``yolo train data=dataset/v2 epochs=100 imgsz=640``  
+``yolo train data=dataset/V2/data.yaml epochs=100 imgsz=640``  
 
 ## Launch
 You can use the model with the following command, the model will use the latest model provided in this repo at ``/model/detect``:

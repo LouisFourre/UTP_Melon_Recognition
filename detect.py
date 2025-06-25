@@ -5,10 +5,9 @@ import sys, time, torch
 video_path = sys.argv[1] if len(sys.argv) > 1 else "No video path provided."
 
 # Model parameters
-target_class_name = "Melon"
-conf_threshold = 0.8
+conf_threshold = 0.7
 
-model = YOLO("models/detect/V2/weights/best.pt")
+model = YOLO("models/detect/V3/weights/best.pt")
 model.to('cuda' if torch.cuda.is_available() else 'cpu') # Need pytorch with cuda support!!
 
 t_start = time.perf_counter()
