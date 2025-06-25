@@ -1,6 +1,6 @@
 # UTP_Melon_Recognition
 
-Project use to count the number of melon on a given video.  
+This project is to count the number of melon on a given video.  
 This is used to count the number of melon in the first row situated in a greenhouse.
 
 The old_detect.py file should not be used, less effecient, slower and cannot track melon between frames,
