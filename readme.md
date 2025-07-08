@@ -37,4 +37,9 @@ If you want to make your own model and use the dataset,  install the YOLO cli to
 ## Launch
 You can use the model with the following command, the model will use the latest model provided in this repo at ``/model/detect``:
 
-``python detect.py "<path to your video>"``
+``python detect.py "<path to your video>"`` for the newest version.
+
+You can also use previous version with ``python V<number>R.py "<path to your video>"`` and by replacing ``<number>`` by version you want to use.
+
+ - V3R: Usage of the track method from Ultralytics YOLO, error rate of 15% (84 melons on 73).
+ - V4R: Usage of the line counter method from Ultralytics Solutions, error rate of 4.1% (70 melons on 73).
