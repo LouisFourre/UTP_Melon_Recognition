@@ -43,3 +43,6 @@ You can also use previous version with ``python V<number>R.py "<path to your vid
 
  - V3R: Usage of the track method from Ultralytics YOLO, error rate of 15% (84 melons on 73).
  - V4R: Usage of the line counter method from Ultralytics Solutions, error rate of 4.1% (70 melons on 73).
+
+
+The file ``test-tracker.yaml`` is for testing purposes only.

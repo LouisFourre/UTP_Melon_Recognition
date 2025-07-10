@@ -15,17 +15,19 @@ assert cap.isOpened(), "Error reading video file"
 w, h, fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
 video_writer = cv2.VideoWriter("object_counting_output.avi", cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
-region_points = [(int(w/2), 0), (int(w/2), (int(h)))] # line counting
+line_quarter = [(int(w/4), 0), (int(w/4), int(h))]
+line_middle  = [(int(w/2), 0), (int(w/2), int(h))]
+line_3quarter = [(int(3*w/4), 0), (int(3*w/4), int(h))] # line counting
 
 
 # Initialize object counter object
 counter = solutions.ObjectCounter(
-    show=True,  # display the output
-    region=region_points,  # pass region points
-    model="models/detect/V2/weights/best.pt", 
-    conf=conf_threshold,  # confidence threshold
+    show=True,
+    region=line_3quarter,
+    model="models/detect/V2/weights/best.pt",
+    conf=conf_threshold,
     show_out=False,
-    tracker="trackerV2.yaml",
+    tracker="tracker.yaml",
     device='cuda' if torch.cuda.is_available() else 'cpu',
 )
 
@@ -38,12 +40,13 @@ while cap.isOpened():
         break
 
     results = counter(im0)
+
     video_writer.write(results.plot_im)  # write the processed frame.
 
 t_stop = time.perf_counter()
 
 print("Time taken to compute: ",t_stop - t_start)
-print("Number of Melons: ", results.in_count)
+print("Number of Melons at 1/4:", results.in_count)
 cap.release()
 video_writer.release()
 cv2.destroyAllWindows()  # destroy all opened windows

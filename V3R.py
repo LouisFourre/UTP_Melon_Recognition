@@ -12,7 +12,7 @@ model.to('cuda' if torch.cuda.is_available() else 'cpu') # Need pytorch with cud
 
 t_start = time.perf_counter()
 
-results = model.track(video_path, show=True, conf=conf_threshold, save=True, stream=True,tracker="trackerV2.yaml",persist=True)
+results = model.track(video_path, show=True, conf=conf_threshold, save=True, stream=True,tracker="tracker.yaml",persist=True)
 
 # get the last seen melon ids, cause each id is unique, last id is also the nulber of melons
 last_seen_id = -1

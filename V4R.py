@@ -15,7 +15,7 @@ assert cap.isOpened(), "Error reading video file"
 w, h, fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
 video_writer = cv2.VideoWriter("object_counting_output.avi", cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
-region_points = [(int(w/2), 0), (int(w/2), (int(h)))] # line counting
+region_points = [(int(3*w/4), 0), (int(3*w/4), int(h))] # line counting at quarter of the video width
 
 
 # Initialize object counter object
@@ -25,7 +25,7 @@ counter = solutions.ObjectCounter(
     model="models/detect/V2/weights/best.pt", 
     conf=conf_threshold,  # confidence threshold
     show_out=False,
-    tracker="trackerV2.yaml",
+    tracker="tracker.yaml",
     device='cuda' if torch.cuda.is_available() else 'cpu',
 )
 
