@@ -3,6 +3,7 @@ from PIL import Image, ImageDraw, ImageFont
 import matplotlib.pyplot as plt
 import cv2, os, sys, time, glob, shutil
 
+t_start = time.perf_counter()
 # Parameters
 video_path = sys.argv[1] if len(sys.argv) > 1 else "No video path provided."
 annotated_dir = "frames_output"
@@ -10,7 +11,7 @@ annotated_video_path = "output/annotated_video.mp4"
 os.makedirs(annotated_dir, exist_ok=True)
 
 # Model parameters
-target_class_name = "Melon"
+target_class_name = "Front-melon"
 conf_threshold = 0.7
 
 
@@ -19,7 +20,7 @@ try:
 except:
     font = ImageFont.load_default()
 
-model = YOLO("models/detect/train2/weights/best.pt")
+model = YOLO("models/detect/V3/weights/best.pt")
 
 cap = cv2.VideoCapture(video_path)
 fps = int(cap.get(cv2.CAP_PROP_FPS))
@@ -29,7 +30,7 @@ height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 total_melon_count=0
 frame_idx = 0
 
-t_start = time.perf_counter()
+
 
 while cap.isOpened():
     ret, frame = cap.read()
